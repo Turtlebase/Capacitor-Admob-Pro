@@ -1,26 +1,14 @@
 plugins {
     id 'com.android.library'
 }
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.2'
-        implementation "androidx.appcompat:appcompat:1.6.1"
-        implementation "com.google.android.gms:play-services-ads:23.0.0"
-    }
-}
-
 
 android {
     namespace "com.admobadvanced"
-    compileSdk project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 34
+    compileSdk 34
 
     defaultConfig {
-        minSdk project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 22
-        targetSdk project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 34
+        minSdk 23
+        targetSdk 34
         versionCode 1
         versionName "1.0.0"
     }
@@ -32,7 +20,7 @@ android {
         }
     }
 
-    lintOptions {
+    lint {
         abortOnError false
     }
 
@@ -48,12 +36,14 @@ repositories {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':capacitor-android')
 
-    // Google Mobile Ads (AdMob)
-    implementation 'com.google.android.gms:play-services-ads:23.2.0'
+    // AdMob
+    implementation "com.google.android.gms:play-services-ads:23.2.0"
 
-    // UMP Consent SDK
-    implementation 'com.google.android.ump:user-messaging-platform:3.0.0'
+    // Consent SDK
+    implementation "com.google.android.ump:user-messaging-platform:3.0.0"
+
+    // Required for AppCompatActivity
+    implementation "androidx.appcompat:appcompat:1.6.1"
 }
