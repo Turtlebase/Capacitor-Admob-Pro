@@ -13,4 +13,11 @@ export class AdMobAdvanced extends WebPlugin implements AdMobAdvancedPlugin {
   async hideBanner(): Promise<void> {
     console.log('Hide banner');
   }
+  async warmAll(): Promise<void> {
+  console.log('warmAll (web fallback)');
+}
+
+async isGoogleMobileAdsReady(): Promise<{ value: boolean }> {
+  return { value: true };
+  
 }
