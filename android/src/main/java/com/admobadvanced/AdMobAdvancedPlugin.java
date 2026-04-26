@@ -101,19 +101,6 @@ public class AdMobAdvancedPlugin extends Plugin {
             call.resolve();
         }));
     }
-
-    @PluginMethod
-public void warmAll(PluginCall call) {
-    call.resolve();
-}
-
-@PluginMethod
-public void isGoogleMobileAdsReady(PluginCall call) {
-    JSObject ret = new JSObject();
-    ret.put("value", isMobileAdsInitialized);
-    call.resolve(ret);
-}
-
     
     // ─────────────────────────────────────────────────────────────────────────
     // CONSENT
