@@ -1,7 +1,40 @@
 export interface AdMobAdvancedPlugin {
-    initialize(): Promise<void>;
+    initialize(options?: {
+        testingDevices?: string[];
+    }): Promise<void>;
+    requestConsentInfo(): Promise<any>;
+    showConsentForm(): Promise<any>;
+    resetConsent(): Promise<void>;
     showBanner(options: {
         adId: string;
     }): Promise<void>;
     hideBanner(): Promise<void>;
+    resumeBanner(): Promise<void>;
+    removeBanner(): Promise<void>;
+    setBannerPosition(options: {
+        position: string;
+        margin?: number;
+    }): Promise<void>;
+    prepareInterstitial(options: {
+        adId: string;
+    }): Promise<any>;
+    showInterstitial(options?: {
+        adId?: string;
+    }): Promise<void>;
+    prepareRewarded(options: {
+        adId: string;
+    }): Promise<any>;
+    showRewarded(): Promise<any>;
+    prepareRewardedInterstitial(options: {
+        adId: string;
+    }): Promise<any>;
+    showRewardedInterstitial(): Promise<any>;
+    prepareAppOpen(options: {
+        adId: string;
+    }): Promise<any>;
+    showAppOpen(): Promise<void>;
+    warmAll(): Promise<void>;
+    isGoogleMobileAdsReady(): Promise<{
+        value: boolean;
+    }>;
 }
