@@ -263,24 +263,21 @@ grantCoins(reward.amount);
 
 ---
 
-## Native Advanced (scroll-sync overlay)
+## Native Advanced (bottom overlay)
 
-```html
-<div id="native-ad-slot" style="width:100%;height:300px;"></div>
-```
+Native ads are rendered by Android as a bounded, bottom-centered overlay over the
+Capacitor WebView. The default size is `300dp x 200dp`; the WebView remains
+visible everywhere else and no page container is required.
 
 ```typescript
 await AdMobAdvanced.loadNativeAd({
   adId: 'ca-app-pub-3940256099942544/2247696110',
-  containerId: '#native-ad-slot',
 });
-await AdMobAdvanced.showNativeAd({ containerId: '#native-ad-slot' });
-
-// Sync on scroll (auto-synced on device; useful for custom scroll containers)
-window.addEventListener('scroll', () =>
-  AdMobAdvanced.updateNativeAdLayout({ containerId: '#native-ad-slot' })
-, { passive: true });
+await AdMobAdvanced.showNativeAd({ width: 300, height: 200, bottomMargin: 8 });
 ```
+
+Use `hideNativeAd()` to temporarily hide the overlay or `removeNativeAd()` to
+destroy it and release the loaded ad.
 
 ---
 

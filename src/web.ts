@@ -41,6 +41,27 @@ export class AdMobAdvanced extends WebPlugin implements AdMobAdvancedPlugin {
     console.log('Set banner position:', options);
   }
 
+  async loadNativeAd(options: { adId: string }): Promise<any> {
+    console.log('loadNativeAd (web):', options.adId);
+    return {};
+  }
+
+  async showNativeAd(options?: { containerId?: string; width?: number; height?: number; bottomMargin?: number }): Promise<void> {
+    console.log('showNativeAd (web):', options);
+  }
+
+  async hideNativeAd(): Promise<void> {
+    console.log('hideNativeAd (web)');
+  }
+
+  async updateNativeAdLayout(options?: { containerId?: string }): Promise<void> {
+    console.log('updateNativeAdLayout (web)');
+  }
+
+  async removeNativeAd(): Promise<void> {
+    console.log('removeNativeAd (web)');
+  }
+
   async prepareInterstitial(): Promise<any> {
     console.log('prepareInterstitial (web)');
     return {};

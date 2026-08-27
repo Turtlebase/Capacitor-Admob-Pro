@@ -2,190 +2,104 @@ package com.admobadvanced;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Rect;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
+import android.graphics.drawable.GradientDrawable;
+import android.view.Gravity;
 import android.view.View;
-import android.webkit.JavascriptInterface;
-import android.webkit.WebView;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.RatingBar;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.ads.nativead.MediaView;
 import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.ads.nativead.NativeAdView;
 
-/**
- * NativeAdOverlayView
- *
- * Renders a NativeAdView as an absolute overlay on top of the Capacitor WebView
- * and keeps its position perfectly in sync with the DOM element identified by
- * {@code containerId} — even when the user scrolls the page.
- *
- * How it works:
- *   1. On construction we inject a small JS helper into the WebView via
- *      addJavascriptInterface so the JS side can push the container's
- *      getBoundingClientRect() to the native layer on every scroll / resize.
- *   2. We use a Choreographer tick (vsync) to apply layout updates on the
- *      next frame — this gives us perfectly smooth scroll-tracking at 60/120 fps.
- */
+/** A bounded native ad surface anchored to the bottom of the Capacitor window. */
 public class NativeAdOverlayView extends FrameLayout {
 
-    private static final String TAG = "NativeAdOverlay";
-
-    private final WebView webView;
-    private final String containerId;
     private final NativeAdView nativeAdView;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    // Last known rect from JS (in CSS pixels)
-    private float rectTop, rectLeft, rectWidth, rectHeight;
-    private boolean hasPendingLayout = false;
-
-    public NativeAdOverlayView(Context context, NativeAd ad, WebView webView, String containerId) {
+    public NativeAdOverlayView(Context context, NativeAd ad, int widthDp, int heightDp, int bottomMarginDp) {
         super(context);
-        this.webView     = webView;
-        this.containerId = containerId;
-
-        setLayoutParams(new FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT));
         setBackgroundColor(Color.TRANSPARENT);
         setClickable(false);
         setFocusable(false);
 
         nativeAdView = buildNativeAdView(context, ad);
-        addView(nativeAdView);
+        addView(nativeAdView, new FrameLayout.LayoutParams(
+            LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-        injectScrollBridge();
-    }
-
-    /** Manually trigger a position sync (called from the plugin on updateNativeAdLayout). */
-    public void syncPosition() {
-        String js = "window.__admobNative && window.__admobNative.sync('" + escapeSingleQuotes(containerId) + "');";
-        webView.evaluateJavascript(js, null);
-    }
-
-    /** Called by the JS bridge with fresh rect values. */
-    private void applyRect(float top, float left, float width, float height) {
-        rectTop    = top;
-        rectLeft   = left;
-        rectWidth  = width;
-        rectHeight = height;
-        if (!hasPendingLayout) {
-            hasPendingLayout = true;
-            mainHandler.post(this::doLayout);
-        }
-    }
-
-    private void doLayout() {
-        hasPendingLayout = false;
-        float density = getResources().getDisplayMetrics().density;
-
-        // Convert CSS px → physical px
-        int l = Math.round(rectLeft  * density);
-        int t = Math.round(rectTop   * density);
-        int w = Math.max(1, Math.round(rectWidth  * density));
-        int h = Math.max(1, Math.round(rectHeight * density));
-
-        // Offset by webview position within the activity window
-        Rect wvRect = new Rect();
-        webView.getGlobalVisibleRect(wvRect);
-
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, h);
-        lp.leftMargin = wvRect.left + l;
-        lp.topMargin  = wvRect.top  + t;
-        nativeAdView.setLayoutParams(lp);
-    }
-
-    // ── JS bridge injection ────────────────────────────────────────────────────
-
-    private void injectScrollBridge() {
-        webView.addJavascriptInterface(new NativeBridge(), "__admobBridge");
-
-        String js = "(function(){" +
-            "if(window.__admobNative)return;" +
-            "function sync(id){" +
-            "  var el=document.querySelector(id);" +
-            "  if(!el)return;" +
-            "  var r=el.getBoundingClientRect();" +
-            "  window.__admobBridge.onRect(id,r.top,r.left,r.width,r.height);" +
-            "}" +
-            "window.__admobNative={sync:sync};" +
-            "['scroll','resize','touchmove'].forEach(function(ev){" +
-            "  window.addEventListener(ev,function(){sync('" + escapeSingleQuotes(containerId) + "');},{passive:true});" +
-            "});" +
-            "sync('" + escapeSingleQuotes(containerId) + "');" +
-            "})();";
-
-        webView.evaluateJavascript(js, null);
+        int maxWidth = Math.max(1, getResources().getDisplayMetrics().widthPixels - dp(16));
+        int width = Math.min(dp(Math.max(1, widthDp)), maxWidth);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+            width, dp(Math.max(1, heightDp)), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        params.bottomMargin = dp(Math.max(0, bottomMarginDp));
+        setLayoutParams(params);
     }
 
     private NativeAdView buildNativeAdView(Context context, NativeAd ad) {
         NativeAdView view = new NativeAdView(context);
-        view.setBackgroundColor(Color.WHITE);
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(Color.WHITE);
+        background.setCornerRadius(dp(6));
+        view.setBackground(background);
+        view.setPadding(dp(8), dp(8), dp(8), dp(8));
+        view.setElevation(dp(3));
 
-        FrameLayout.LayoutParams fillParams = new FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT);
+        LinearLayout content = new LinearLayout(context);
+        content.setOrientation(LinearLayout.HORIZONTAL);
 
-        // Headline
-        TextView headlineView = new TextView(context);
-        headlineView.setTextSize(14);
-        headlineView.setTextColor(Color.BLACK);
-        headlineView.setText(ad.getHeadline());
-        view.setHeadlineView(headlineView);
-
-        // Body
-        TextView bodyView = new TextView(context);
-        bodyView.setTextSize(11);
-        bodyView.setTextColor(Color.DKGRAY);
-        if (ad.getBody() != null) bodyView.setText(ad.getBody());
-        view.setBodyView(bodyView);
-
-        // CTA button
-        TextView ctaView = new TextView(context);
-        ctaView.setBackgroundColor(Color.parseColor("#4285F4"));
-        ctaView.setTextColor(Color.WHITE);
-        ctaView.setTextSize(12);
-        ctaView.setPadding(24, 12, 24, 12);
-        if (ad.getCallToAction() != null) ctaView.setText(ad.getCallToAction());
-        view.setCallToActionView(ctaView);
-
-        // MediaView
         MediaView mediaView = new MediaView(context);
+        mediaView.setId(View.generateViewId());
         view.setMediaView(mediaView);
+        content.addView(mediaView, new LinearLayout.LayoutParams(dp(112), LayoutParams.MATCH_PARENT));
 
-        // Layout
-        android.widget.LinearLayout inner = new android.widget.LinearLayout(context);
-        inner.setOrientation(android.widget.LinearLayout.VERTICAL);
-        inner.setPadding(16, 16, 16, 16);
-        inner.addView(headlineView);
-        inner.addView(bodyView);
-        inner.addView(ctaView);
-        view.addView(inner, fillParams);
+        LinearLayout details = new LinearLayout(context);
+        details.setOrientation(LinearLayout.VERTICAL);
+        details.setPadding(dp(8), 0, 0, 0);
 
+        TextView adLabel = textView(context, 10, Color.DKGRAY);
+        adLabel.setText("Ad");
+        details.addView(adLabel, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(16)));
+
+        TextView headline = textView(context, 14, Color.BLACK);
+        headline.setMaxLines(2);
+        headline.setText(ad.getHeadline());
+        view.setHeadlineView(headline);
+        details.addView(headline, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
+
+        TextView body = textView(context, 11, Color.DKGRAY);
+        body.setMaxLines(2);
+        if (ad.getBody() != null) body.setText(ad.getBody());
+        view.setBodyView(body);
+        details.addView(body, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
+
+        TextView cta = textView(context, 12, Color.WHITE);
+        cta.setGravity(Gravity.CENTER);
+        cta.setBackgroundColor(Color.rgb(66, 133, 244));
+        cta.setPadding(dp(12), dp(4), dp(12), dp(4));
+        if (ad.getCallToAction() != null) cta.setText(ad.getCallToAction());
+        view.setCallToActionView(cta);
+        details.addView(cta, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(32)));
+
+        content.addView(details, new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1));
+        view.addView(content, new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         view.setNativeAd(ad);
         return view;
     }
 
+    private TextView textView(Context context, int sizeSp, int color) {
+        TextView result = new TextView(context);
+        result.setTextSize(sizeSp);
+        result.setTextColor(color);
+        result.setGravity(Gravity.CENTER_VERTICAL);
+        return result;
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
     public void destroy() {
         nativeAdView.destroy();
-    }
-
-    private static String escapeSingleQuotes(String s) {
-        return s == null ? "" : s.replace("'", "\\'");
-    }
-
-    // ── Inner JavascriptInterface ──────────────────────────────────────────────
-
-    private class NativeBridge {
-        @JavascriptInterface
-        public void onRect(String id, float top, float left, float width, float height) {
-            applyRect(top, left, width, height);
-        }
     }
 }

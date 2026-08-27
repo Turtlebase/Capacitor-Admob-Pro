@@ -11,6 +11,12 @@ export interface AdMobAdvancedPlugin {
   removeBanner(): Promise<void>;
   setBannerPosition(options: { position: string; margin?: number }): Promise<void>;
 
+  loadNativeAd(options: { adId: string }): Promise<any>;
+  showNativeAd(options?: { containerId?: string; width?: number; height?: number; bottomMargin?: number }): Promise<void>;
+  hideNativeAd(): Promise<void>;
+  updateNativeAdLayout(options?: { containerId?: string }): Promise<void>;
+  removeNativeAd(): Promise<void>;
+
   prepareInterstitial(options: { adId: string }): Promise<any>;
   showInterstitial(options?: { adId?: string }): Promise<void>;
 

@@ -465,7 +465,9 @@ public class AdMobAdvancedPlugin extends Plugin {
 
     @PluginMethod
     public void showNativeAd(PluginCall call) {
-        String containerId = call.getString("containerId", "");
+        int widthDp = call.getInt("width", 300);
+        int heightDp = call.getInt("height", 200);
+        int bottomMarginDp = call.getInt("bottomMargin", 8);
         mainHandler.post(() -> {
             if (nativeAd == null) { call.reject("Native ad not loaded"); return; }
             Activity activity = getActivity();
@@ -474,16 +476,15 @@ public class AdMobAdvancedPlugin extends Plugin {
                 ViewGroup p = (ViewGroup) nativeOverlayView.getParent();
                 if (p != null) p.removeView(nativeOverlayView);
             }
-            nativeOverlayView = new NativeAdOverlayView(activity, nativeAd, getBridge().getWebView(), containerId);
+            nativeOverlayView = new NativeAdOverlayView(activity, nativeAd, widthDp, heightDp, bottomMarginDp);
             ViewGroup root = (ViewGroup) activity.getWindow().getDecorView().getRootView();
-            root.addView(nativeOverlayView, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            root.addView(nativeOverlayView);
             call.resolve();
         });
     }
 
     @PluginMethod public void hideNativeAd(PluginCall call)      { mainHandler.post(() -> { if (nativeOverlayView != null) nativeOverlayView.setVisibility(View.GONE); call.resolve(); }); }
-    @PluginMethod public void updateNativeAdLayout(PluginCall call) { mainHandler.post(() -> { if (nativeOverlayView != null) nativeOverlayView.syncPosition(); call.resolve(); }); }
+    @PluginMethod public void updateNativeAdLayout(PluginCall call) { call.resolve(); }
 
     @PluginMethod
     public void removeNativeAd(PluginCall call) {

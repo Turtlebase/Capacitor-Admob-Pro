@@ -15,6 +15,20 @@ export declare class AdMobAdvanced extends WebPlugin implements AdMobAdvancedPlu
         position: string;
         margin?: number;
     }): Promise<void>;
+    loadNativeAd(options: {
+        adId: string;
+    }): Promise<any>;
+    showNativeAd(options?: {
+        containerId?: string;
+        width?: number;
+        height?: number;
+        bottomMargin?: number;
+    }): Promise<void>;
+    hideNativeAd(): Promise<void>;
+    updateNativeAdLayout(options?: {
+        containerId?: string;
+    }): Promise<void>;
+    removeNativeAd(): Promise<void>;
     prepareInterstitial(): Promise<any>;
     showInterstitial(): Promise<void>;
     prepareRewarded(): Promise<any>;

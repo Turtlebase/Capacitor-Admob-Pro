@@ -36,6 +36,22 @@ class AdMobAdvanced extends core.WebPlugin {
     async setBannerPosition(options) {
         console.log('Set banner position:', options);
     }
+    async loadNativeAd(options) {
+        console.log('loadNativeAd (web):', options.adId);
+        return {};
+    }
+    async showNativeAd(options) {
+        console.log('showNativeAd (web):', options);
+    }
+    async hideNativeAd() {
+        console.log('hideNativeAd (web)');
+    }
+    async updateNativeAdLayout(options) {
+        console.log('updateNativeAdLayout (web)');
+    }
+    async removeNativeAd() {
+        console.log('removeNativeAd (web)');
+    }
     async prepareInterstitial() {
         console.log('prepareInterstitial (web)');
         return {};
