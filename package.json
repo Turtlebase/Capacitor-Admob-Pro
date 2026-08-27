@@ -1,6 +1,6 @@
 {
   "name": "capacitor-admob-advanced",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Advanced AdMob plugin for Capacitor — Banner, Interstitial, Rewarded, Rewarded Interstitial, Native Advanced, App Open Ads with full scroll sync and overlay support",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
