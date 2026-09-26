@@ -239,10 +239,9 @@ public class AdMobAdvancedPlugin extends Plugin {
             if (ad != null) {
                 // INSTANT PATH — warm ad from pool, 0 ms latency
                 isShowingFullscreen = true;
-                ad.setFullScreenContentCallback(interstitialCallback(call));
+                ad.setFullScreenContentCallback(interstitialCallback(call, slot));
                 ad.show(getActivity());
-                // Reload in background immediately (don't wait for dismiss)
-                cache.reloadInterstitialSlot(getActivity(), slot);
+                // InMobi requires the slot to be reloaded only after dismissal.
             } else {
                 // COLD FALLBACK — load on-demand (only if prepare was not called)
                 Log.w(TAG, "No warm interstitial — cold load");
@@ -251,10 +250,8 @@ public class AdMobAdvancedPlugin extends Plugin {
                     new InterstitialAdLoadCallback() {
                         @Override public void onAdLoaded(@NonNull InterstitialAd freshAd) {
                             isShowingFullscreen = true;
-                            freshAd.setFullScreenContentCallback(interstitialCallback(call));
+                            freshAd.setFullScreenContentCallback(interstitialCallback(call, 0));
                             freshAd.show(getActivity());
-                            cache.reloadInterstitialSlot(getActivity(), 0);
-                            cache.reloadInterstitialSlot(getActivity(), 1);
                         }
                         @Override public void onAdFailedToLoad(@NonNull LoadAdError e) {
                             notifyListeners("interstitialAdFailedToShow", adErrorObj(e));
@@ -265,18 +262,20 @@ public class AdMobAdvancedPlugin extends Plugin {
         });
     }
 
-    private FullScreenContentCallback interstitialCallback(PluginCall call) {
+    private FullScreenContentCallback interstitialCallback(PluginCall call, int slot) {
         return new FullScreenContentCallback() {
             @Override public void onAdShowedFullScreenContent() { notifyListeners("interstitialAdShowed",     new JSObject()); }
             @Override public void onAdDismissedFullScreenContent() {
                 isShowingFullscreen = false;
                 notifyListeners("interstitialAdDismissed", new JSObject());
                 call.resolve();
+                cache.reloadInterstitialSlot(getActivity(), slot);
             }
             @Override public void onAdFailedToShowFullScreenContent(AdError e) {
                 isShowingFullscreen = false;
                 notifyListeners("interstitialAdFailedToShow", adErrorObj(e));
                 call.reject(e.getMessage());
+                cache.reloadInterstitialSlot(getActivity(), slot);
             }
             @Override public void onAdClicked()    { notifyListeners("interstitialAdClicked",    new JSObject()); }
             @Override public void onAdImpression() { notifyListeners("interstitialAdImpression", new JSObject()); }
@@ -315,8 +314,16 @@ public class AdMobAdvancedPlugin extends Plugin {
                 isShowingFullscreen = true;
                 ad.setFullScreenContentCallback(new FullScreenContentCallback() {
                     @Override public void onAdShowedFullScreenContent()    { notifyListeners("rewardedAdShowed",    new JSObject()); }
-                    @Override public void onAdDismissedFullScreenContent() { isShowingFullscreen = false; notifyListeners("rewardedAdDismissed", new JSObject()); }
-                    @Override public void onAdFailedToShowFullScreenContent(AdError e) { isShowingFullscreen = false; call.reject(e.getMessage()); }
+                    @Override public void onAdDismissedFullScreenContent() {
+                        isShowingFullscreen = false;
+                        notifyListeners("rewardedAdDismissed", new JSObject());
+                        cache.reloadRewardedSlot(getActivity(), slot);
+                    }
+                    @Override public void onAdFailedToShowFullScreenContent(AdError e) {
+                        isShowingFullscreen = false;
+                        call.reject(e.getMessage());
+                        cache.reloadRewardedSlot(getActivity(), slot);
+                    }
                     @Override public void onAdImpression() { notifyListeners("rewardedAdImpression", new JSObject()); }
                 });
                 ad.show(getActivity(), rewardItem -> {
@@ -325,7 +332,6 @@ public class AdMobAdvancedPlugin extends Plugin {
                     notifyListeners("rewardedAdRewarded", reward);
                     call.resolve(reward);
                 });
-                cache.reloadRewardedSlot(getActivity(), slot);
             } else {
                 call.reject("Rewarded ad not ready — call prepareRewarded first");
             }

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'CapacitorAdmobAdvanced'
-  s.version          = '1.0.0'
+  s.version          = '1.0.2'
   s.summary          = 'Advanced AdMob plugin for Capacitor — all ad formats.'
   s.description      = <<-DESC
     Complete AdMob Capacitor plugin supporting Banner, Interstitial, Rewarded,

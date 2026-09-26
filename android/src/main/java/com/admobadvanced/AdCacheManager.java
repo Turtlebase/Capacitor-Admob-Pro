@@ -36,7 +36,7 @@ public class AdCacheManager {
     private static final long   MAX_AGE_MS = 60 * 60 * 1000L;      // 1 hour (Google allows ~4h, we use 1h to be safe)
     private static final long   RETRY_BASE = 5_000L;                // 5 s first retry
     private static final int    MAX_RETRY  = 5;                     // stop after 5 retries
-    private static final int    POOL_SIZE  = 2;                     // keep 2 ads warm per type
+    private static final int    POOL_SIZE  = 1;                     // InMobi mediation supports one warm ad per type
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -45,7 +45,7 @@ public class AdCacheManager {
     private final InterstitialAd[]  interstitialPool     = new InterstitialAd[POOL_SIZE];
     private final long[]            interstitialLoadTime = new long[POOL_SIZE];
     private final AtomicBoolean[]   interstitialLoading  = new AtomicBoolean[]{
-        new AtomicBoolean(false), new AtomicBoolean(false) };
+        new AtomicBoolean(false) };
     private String interstitialAdId;
     private int interstitialRetry = 0;
 
@@ -54,7 +54,7 @@ public class AdCacheManager {
     private final RewardedAd[] rewardedPool     = new RewardedAd[POOL_SIZE];
     private final long[]       rewardedLoadTime = new long[POOL_SIZE];
     private final AtomicBoolean[] rewardedLoading = new AtomicBoolean[]{
-        new AtomicBoolean(false), new AtomicBoolean(false) };
+        new AtomicBoolean(false) };
     private String rewardedAdId;
 
     // ── Rewarded Interstitial pool ────────────────────────────────────────────
@@ -62,7 +62,7 @@ public class AdCacheManager {
     private final RewardedInterstitialAd[] riPool     = new RewardedInterstitialAd[POOL_SIZE];
     private final long[]                   riLoadTime = new long[POOL_SIZE];
     private final AtomicBoolean[] riLoading = new AtomicBoolean[]{
-        new AtomicBoolean(false), new AtomicBoolean(false) };
+        new AtomicBoolean(false) };
     private String riAdId;
 
     // ── App Open ──────────────────────────────────────────────────────────────
